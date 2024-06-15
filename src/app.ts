@@ -1,6 +1,6 @@
 import express from 'express';
 import receiverRoute from './routes/receiverRoute';
-//import './database/db'
+import './database/db'
 
 const app = express();
 
