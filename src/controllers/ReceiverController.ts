@@ -12,6 +12,7 @@ export const ReceiverList = async (req: Request, res: Response): Promise<void> =
 export const ReceiverPost = async (req: Request, res: Response): Promise<void> => {
     try {
         const receiver = new Receiver(req.body);
+        await receiver.validate();
         await receiver.save();
         res.status(201).json({ message: 'Usuário criado com sucesso' });
       } catch (error: any) {

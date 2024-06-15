@@ -1,27 +1,26 @@
-version: '3.9'
-
+version: '3.8'
 services:
-  mongodb:
+  my_mongodb:
     image: mongo:latest
     container_name: my_mongodb
     ports:
       - "27017:27017"
     volumes:
-      - mongodbdata:/data/db
+      - mongo-data:/data/db
 
   app:
-    build: 
+    build:
       context: .
       dockerfile: Dockerfile
-    container_name: my_typescript_app
+    container_name: app
     ports:
       - "3000:3000"
-    depends_on:
-      - mongodb
-    environment:
-      - MONGO_URI=mongodb://mongodb:27017/mydatabase
     volumes:
-      - ./src:/usr/src/app/src   # Mapeia o diretório src local para dentro do contêiner
+      - .:/usr/src/app
+    environment:
+      - MONGODB_URI=mongodb://my_mongodb:27017/pixLister
+    depends_on:
+      - my_mongodb
 
 volumes:
-  mongodbdata:
+  mongo-data:
