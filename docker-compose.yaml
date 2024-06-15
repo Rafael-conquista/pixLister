@@ -1,0 +1,27 @@
+version: '3.9'
+
+services:
+  mongodb:
+    image: mongo:latest
+    container_name: my_mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodbdata:/data/db
+
+  app:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: my_typescript_app
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/mydatabase
+    volumes:
+      - ./src:/usr/src/app/src   # Mapeia o diretório src local para dentro do contêiner
+
+volumes:
+  mongodbdata:
