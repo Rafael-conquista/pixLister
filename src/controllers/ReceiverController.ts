@@ -1,10 +1,29 @@
 import { Request, Response } from 'express';
 import Receiver from '../models/ReceiverModel';
+import { queryParamValidator } from '../utils/queryParamValidator';
+
+const paginate = (items: any[], page: number, pageSize: number) => {
+    const offset = (page - 1) * pageSize;
+    return items.slice(offset, offset + pageSize);
+};
 
 export const ReceiverList = async (req: Request, res: Response): Promise<void> => {
     try {
-        const receivers = await Receiver.find({});
-        res.status(200).json(receivers);
+        const receivers:any[] = await Receiver.find({});
+        let filteredItems:any[] = receivers;
+        filteredItems = queryParamValidator(req.query, filteredItems)
+        
+        const page:number = parseInt(req.query.page as string) || 1;
+        const pageSize:number = 10;
+        const paginatedItems: any[] = paginate(filteredItems, page, pageSize);
+
+        res.status(200).json({
+            page,
+            pageSize,
+            totalItems: filteredItems.length,
+            totalPages: Math.ceil(filteredItems.length / pageSize),
+            items: paginatedItems
+        });
     } catch (e: any) {
         res.status(500).json({ error: e.message });
     }
@@ -21,37 +40,45 @@ export const ReceiverPost = async (req: Request, res: Response): Promise<void> =
     }
 };
 
+const prepareReceiverUpdate = (receiver: any, body: any): [object, string] => {
+    let new_body: object = body;
+    let message: string = 'Recebedor atualizado com sucesso';
+
+    if (body.hasOwnProperty('pixKeyType')) {
+        body.pixKeyType = body.pixKeyType.toUpperCase();
+    }
+
+    if (body.hasOwnProperty('status')) {
+        body.status = body.status.toUpperCase();
+    }
+
+    if (receiver?.status === 'RASCUNHO') {
+        Object.assign(receiver, body);
+    } else if (receiver?.status === 'VALIDADO') {
+        new_body = { receipt_email: body.receipt_email };
+        Object.assign(receiver, new_body);
+        message = 'Recebedor já validado, apenas será possível atualização de seu email de recebimento de comprovante';
+    }
+
+    return [new_body, message];
+};
+
 export const ReceiverPut = async (req: Request, res: Response): Promise<void> => {
     try {
-        let new_body:object = req.body
-        let message:string = 'Recebedor atualizado com sucesso'
+        const receiver = await Receiver.findById(req.params.id);
 
-        let receiver = await Receiver.findById(req.params.id);
-
-        if (Object.keys(req.body).length === 0 || !receiver) {
+        if (!receiver || Object.keys(req.body).length === 0) {
             throw new Error('O corpo da requisição está vazio. Nenhum dado para atualização foi fornecido.');
         }
 
-        if (req.body.hasOwnProperty('pixKeyType')) {
-            req.body.pixKeyType = req.body.pixKeyType.toUpperCase();
-        }
+        const [new_body, message] = prepareReceiverUpdate(receiver, req.body);
 
-        if (req.body.hasOwnProperty('status')) {
-            req.body.status = req.body.status.toUpperCase();
-        }
-
-        if (receiver?.status === 'RASCUNHO') {
-            Object.assign(receiver, req.body);
-        } else if (receiver?.status === 'VALIDADO') {
-            new_body = { receipt_email: req.body.receipt_email };
-            Object.assign(receiver, new_body);
-            message = 'Recebedor já validado, apenas será possíve atualização de seu email de recebimento de comprovante'
-        }
         await receiver?.validate();
-        receiver = await Receiver.findByIdAndUpdate(req.params.id, new_body, { new: true });
+        const updatedReceiver = await Receiver.findByIdAndUpdate(req.params.id, new_body, { new: true });
+
         res.status(200).json({
-            message: message,
-            recebedor: receiver
+            message,
+            recebedor: updatedReceiver
         });
     } catch (e: any) {
         res.status(500).json({ error: e.message });
