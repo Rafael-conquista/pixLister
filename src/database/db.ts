@@ -1,8 +1,11 @@
 let mongoose = require('mongoose')
+import { checkAndInsertData } from "../utils/checkAndInsertData";
 
 mongoose.connect('mongodb://my_mongodb:27017/pixLister', {
   useNewUrlParser: true,
   useUnifiedTopology: true,
+}).then(async () =>{
+  await checkAndInsertData()
 });
 
 const db = mongoose.connection;

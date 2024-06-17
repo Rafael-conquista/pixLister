@@ -26,11 +26,11 @@
       required: true,
       validate: {
         validator: function (this: IReceiver, v: string): boolean {
-          const cpf_regex: boolean = regexList.cnpj.test(v)
+          const cpf_regex: boolean = regexList.cpf.test(v)
           const cnpj_regex: boolean = regexList.cnpj.test(v)
           return cpf_regex || cnpj_regex
         },
-        message: 'Documento inválido para o tipo PIX informado'
+        message: 'Documento inválido'
       }
     },
     receipt_email: {
