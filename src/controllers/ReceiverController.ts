@@ -34,7 +34,7 @@ export const ReceiverPost = async (req: Request, res: Response): Promise<void> =
         const receiver = new Receiver(req.body);
         await receiver.validate();
         await receiver.save();
-        res.status(201).json({ message: 'Recebedor criado com sucesso' });
+        res.status(201).json({ message: 'Recebedor criado com sucesso', recebedor: receiver });
     } catch (error: any) {
         res.status(400).json({ error: error.message });
     }
@@ -105,3 +105,5 @@ export const ReceiverDelete = async (req: Request, res: Response): Promise<void>
         res.status(500).json({ error: e.message });
     }
 };
+
+export { paginate, prepareReceiverUpdate };
